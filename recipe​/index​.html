@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe - Recipe Sharing & Lists</title>
+    <meta name="apple-itunes-app" content="app-id=6770312052">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .header { text-align: center; padding: 30px 0; }
+        .header h1 { font-size: 24px; color: #E67E22; }
+        .recipe-card { background: #2a2a3e; border-radius: 16px; padding: 24px; margin: 20px 0; }
+        .recipe-name { font-size: 22px; font-weight: bold; margin-bottom: 16px; color: #ffffff; }
+        .section-title { font-size: 16px; font-weight: 600; color: #E67E22; margin: 16px 0 8px; }
+        .ingredient { padding: 4px 0; }
+        .directions { line-height: 1.6; white-space: pre-wrap; }
+        .app-banner { text-align: center; padding: 20px; background: #E67E22; border-radius: 16px; margin: 20px 0; }
+        .app-banner a { color: white; text-decoration: none; font-weight: 600; font-size: 18px; }
+        .no-recipe { text-align: center; padding: 40px 0; color: #888; }
+        .source { color: #888; font-size: 14px; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Recipe Sharing & Lists</h1>
+    </div>
+    <div id="recipe-content" class="no-recipe">
+        <p>Loading recipe...</p>
+    </div>
+    <div class="app-banner">
+        <a href="https://apps.apple.com/app/id6770312052">Download Recipe Sharing & Lists</a>
+    </div>
+    <script>
+        function decodeRecipe() {
+            var hash = window.location.hash.substring(1);
+            if (!hash) {
+                document.getElementById('recipe-content').innerHTML = '<p class="no-recipe">Open this link on an iPhone with Recipe Sharing & Lists installed to import the recipe.</p>';
+                return;
+            }
+            try {
+                var base64 = hash.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4 !== 0) base64 += '=';
+                var binaryString = atob(base64);
+                var bytes = new Uint8Array(binaryString.length);
+                for (var i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                var ds = new DecompressionStream('deflate');
+                new Response(new Blob([bytes]).stream().pipeThrough(ds)).text().then(function(jsonString) {
+                    renderRecipe(JSON.parse(jsonString));
+                }).catch(function() {
+                    renderRecipe(JSON.parse(binaryString));
+                });
+            } catch (e) {
+                document.getElementById('recipe-content').innerHTML = '<p class="no-recipe">Could not decode recipe. The link may be corrupted.</p>';
+            }
+        }
+        function renderRecipe(r) {
+            var h = '<div class="recipe-card">';
+            h += '<div class="recipe-name">' + esc(r.n || 'Untitled Recipe') + '</div>';
+            if (r.s) h += '<div class="source">Source: ' + esc(r.s) + '</div>';
+            if (r.i && r.i.length) {
+                h += '<div class="section-title">Ingredients</div>';
+                r.i.forEach(function(ing) { h += '<div class="ingredient">&bull; ' + esc(ing) + '</div>'; });
+            }
+            if (r.d) {
+                h += '<div class="section-title">Directions</div>';
+                h += '<div class="directions">' + esc(r.d) + '</div>';
+            }
+            h += '</div>';
+            document.getElementById('recipe-content').innerHTML = h;
+            if (r.n) document.title = r.n + ' - Recipe Sharing & Lists';
+        }
+        function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+        decodeRecipe();
+    </script>
+</body>
+</html>
