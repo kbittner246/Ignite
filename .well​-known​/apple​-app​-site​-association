@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "945PZWM2G6.Kevin.RecipesGroceries",
+        "paths": ["/recipe", "/recipe/*"]
+      }
+    ]
+  }
+}
