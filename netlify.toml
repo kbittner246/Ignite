@@ -2,8 +2,20 @@
   publish = "."
   command = ""
 
+[[redirects]]
+  from = "/.well-known/apple-app-site-association"
+  to = "/apple-app-site-association.json"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/.well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/apple-app-site-association.json"
   [headers.values]
     Content-Type = "application/json"
     Access-Control-Allow-Origin = "*"
