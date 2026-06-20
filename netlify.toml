@@ -10,7 +10,13 @@
 
 [[redirects]]
   from = "/recipe"
-  to = "/recipe/index.html"
+  to = "/recipe.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/recipe/"
+  to = "/recipe.html"
   status = 200
   force = true
 
