@@ -37,9 +37,11 @@
                 for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
                 var json;
                 try {
-                    var ds = new DecompressionStream('deflate');
+                    // NSData .zlib adds a 2-byte zlib header - strip it for raw deflate
+                    var rawBytes = bytes.slice(2);
+                    var ds = new DecompressionStream('raw');
                     var writer = ds.writable.getWriter();
-                    writer.write(bytes);
+                    writer.write(rawBytes);
                     writer.close();
                     var reader = ds.readable.getReader();
                     var chunks = [];
