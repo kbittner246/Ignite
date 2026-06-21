@@ -26,47 +26,51 @@
         <a class="app-link" href="https://apps.apple.com/app/id6770312052">Get Recipe Sharing & Lists</a>
     </div>
     <script>
-        try {
-            const fragment = window.location.hash.substring(1);
-            if (!fragment) throw new Error('No data');
-            let b64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
-            while (b64.length % 4) b64 += '=';
-            const binary = atob(b64);
-            const bytes = new Uint8Array(binary.length);
-            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-            let json;
+        (async function() {
             try {
-                const ds = new DecompressionStream('deflate');
-                const writer = ds.writable.getWriter();
-                writer.write(bytes);
-                writer.close();
-                const reader = ds.readable.getReader();
-                const chunks = [];
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
+                var fragment = window.location.hash.substring(1);
+                if (!fragment) throw new Error('No data');
+                var b64 = fragment.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                var binary = atob(b64);
+                var bytes = new Uint8Array(binary.length);
+                for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                var json;
+                try {
+                    var ds = new DecompressionStream('deflate');
+                    var writer = ds.writable.getWriter();
+                    writer.write(bytes);
+                    writer.close();
+                    var reader = ds.readable.getReader();
+                    var chunks = [];
+                    while (true) {
+                        var result = await reader.read();
+                        if (result.done) break;
+                        chunks.push(result.value);
+                    }
+                    var totalLength = 0;
+                    for (var j = 0; j < chunks.length; j++) totalLength += chunks[j].length;
+                    var merged = new Uint8Array(totalLength);
+                    var offset = 0;
+                    for (var k = 0; k < chunks.length; k++) { merged.set(chunks[k], offset); offset += chunks[k].length; }
+                    json = new TextDecoder().decode(merged);
+                } catch (e) {
+                    json = new TextDecoder().decode(bytes);
                 }
-                const merged = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
-                let offset = 0;
-                for (const c of chunks) { merged.set(c, offset); offset += c.length; }
-                json = new TextDecoder().decode(merged);
-            } catch {
-                json = new TextDecoder().decode(bytes);
+                var recipe = JSON.parse(json);
+                var html = '<h1>' + (recipe.n || 'Recipe') + '</h1>';
+                if (recipe.s) html += '<p class="source">' + recipe.s + '</p>';
+                if (recipe.i && recipe.i.length) {
+                    html += '<h2>Ingredients</h2><ul>';
+                    for (var m = 0; m < recipe.i.length; m++) { html += '<li>' + recipe.i[m] + '</li>'; }
+                    html += '</ul>';
+                }
+                if (recipe.d) html += '<h2>Directions</h2><div class="directions">' + recipe.d + '</div>';
+                document.getElementById('content').innerHTML = html;
+            } catch (e) {
+                document.getElementById('content').innerHTML = '<h1>Recipe Sharing & Lists</h1><p style="margin-top:12px">Open this link on a device with the app installed to import this recipe.</p>';
             }
-            const recipe = JSON.parse(json);
-            let html = '<h1>' + (recipe.n || 'Recipe') + '</h1>';
-            if (recipe.s) html += '<p class="source">' + recipe.s + '</p>';
-            if (recipe.i && recipe.i.length) {
-                html += '<h2>Ingredients</h2><ul>';
-                recipe.i.forEach(function(ing) { html += '<li>' + ing + '</li>'; });
-                html += '</ul>';
-            }
-            if (recipe.d) html += '<h2>Directions</h2><div class="directions">' + recipe.d + '</div>';
-            document.getElementById('content').innerHTML = html;
-        } catch (e) {
-            document.getElementById('content').innerHTML = '<h1>Recipe Sharing & Lists</h1><p style="margin-top:12px">Open this link on a device with the app installed to import this recipe.</p>';
-        }
+        })();
     </script>
 </body>
 </html>
